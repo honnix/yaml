@@ -1,0 +1,136 @@
+
+
+
+
+##################################################################################
+# Base relationship definitions
+##################################################################################
+relationships:
+
+    cloudify.relationships.depends_on:
+        source_interfaces:
+            cloudify.interfaces.relationship_lifecycle:
+                preconfigure: {}
+                postconfigure: {}
+                establish: {}
+                unlink: {}
+        target_interfaces:
+            cloudify.interfaces.relationship_lifecycle:
+                preconfigure: {}
+                postconfigure: {}
+                establish: {}
+                unlink: {}
+        properties:
+            connection_type:
+                default: all_to_all
+
+    cloudify.relationships.connected_to:
+        derived_from: cloudify.relationships.depends_on
+
+    cloudify.relationships.contained_in:
+        derived_from: cloudify.relationships.depends_on
+
+
+##################################################################################
+# Workflows
+##################################################################################
+workflows:
+    install: default_workflows.cloudify.plugins.workflows.install
+    uninstall: default_workflows.cloudify.plugins.workflows.uninstall
+    execute_operation:
+        mapping: default_workflows.cloudify.plugins.workflows.execute_operation
+        parameters:
+            operation: {}
+            operation_kwargs:
+                default: {}
+            run_by_dependency_order:
+                default: false
+            type_names:
+                default: []
+            node_ids:
+                default: []
+            node_instance_ids:
+                default: []
+
+
+##################################################################################
+# Base artifact definitions
+##################################################################################
+plugins:
+
+    agent_installer:
+        executor: central_deployment_agent
+        install: false
+
+    plugin_installer:
+        executor: host_agent
+        install: false
+
+    windows_agent_installer:
+        executor: central_deployment_agent
+        install: false
+
+    windows_plugin_installer:
+        executor: host_agent
+        install: false
+
+    default_workflows:
+        executor: central_deployment_agent
+        install: false
+
+    script:
+        executor: host_agent
+        install: false
+
+##################################################################################
+# Policy types definitions
+##################################################################################
+policy_types:
+
+    cloudify.policies.types.threshold:
+        properties:
+            metric:
+                description: The metric name
+            threshold:
+                description: The metric threshold value
+            upper_bound:
+                description: |
+                    boolean value for describing the semantics of the threshold.
+                    if 'true': metrics whose value if bigger then the threshold
+                    will cause the triggers to be processed. if 'false': metrics
+                    with values lower then the threshold will do so.
+                default: true
+        source: https://raw.githubusercontent.com/cloudify-cosmo/cloudify-manager/3.1/resources/rest-service/cloudify/policies/threshold.clj
+
+    cloudify.policies.types.host_failure:
+        source: https://raw.githubusercontent.com/cloudify-cosmo/cloudify-manager/3.1/resources/rest-service/cloudify/policies/host_failure.clj
+
+##################################################################################
+# Policy triggers definitions
+##################################################################################
+policy_triggers:
+
+    cloudify.policies.triggers.execute_workflow:
+        parameters:
+            workflow:
+                description: Workflow name to execute
+            workflow_parameters:
+                description: Workflow paramters
+                default: {}
+            force:
+                description: |
+                    Should the workflow be executed even when another execution
+                    for the same workflow is currently in progress
+                default: false
+            allow_custom_parameters:
+                description: |
+                    Should parameters not defined in the workflow parameters
+                    schema be accepted
+                default: false
+            socket_timeout:
+                description: Socket timeout when making request to manager REST in ms
+                default: 1000
+            conn_timeout:
+                description: Connection timeout when making request to manager REST in ms
+                default: 1000
+        source: https://raw.githubusercontent.com/cloudify-cosmo/cloudify-manager/3.1/resources/rest-service/cloudify/triggers/execute_workflow.clj
